@@ -1,25 +1,52 @@
 import assert from "node:assert/strict";
+import { spawn } from "node:child_process";
 import { readFileSync } from "node:fs";
-import { DatabaseSync } from "node:sqlite";
-import test from "node:test";
+import test, { after, before } from "node:test";
 import { fileURLToPath } from "node:url";
 
 const projectRoot = fileURLToPath(new URL("..", import.meta.url));
+const port = 31_000 + Math.floor(Math.random() * 1_000);
+const origin = `http://127.0.0.1:${port}`;
+let server;
+let serverOutput = "";
 
-function applyMigration(database, name) {
-  const sql = readFileSync(`${projectRoot}/drizzle/${name}`, "utf8").replaceAll("--> statement-breakpoint", "");
-  database.exec(sql);
+async function waitForServer() {
+  const deadline = Date.now() + 15_000;
+  while (Date.now() < deadline) {
+    try {
+      const response = await fetch(`${origin}/`);
+      if (response.ok) return;
+    } catch {
+      // The process is still starting.
+    }
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+  throw new Error(`The production server did not start.\n${serverOutput}`);
 }
 
+before(async () => {
+  server = spawn(process.execPath, [".next/standalone/server.js"], {
+    cwd: projectRoot,
+    env: {
+      ...process.env,
+      APP_ORIGIN: origin,
+      HOSTNAME: "127.0.0.1",
+      NODE_ENV: "production",
+      PORT: String(port),
+    },
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+  server.stdout.on("data", (chunk) => { serverOutput += chunk.toString(); });
+  server.stderr.on("data", (chunk) => { serverOutput += chunk.toString(); });
+  await waitForServer();
+});
+
+after(() => {
+  if (server && !server.killed) server.kill("SIGTERM");
+});
+
 async function render(pathname) {
-  const workerUrl = new URL("../dist/server/index.js", import.meta.url);
-  workerUrl.searchParams.set("test", `${process.pid}-${Date.now()}-${pathname}`);
-  const { default: worker } = await import(workerUrl.href);
-  return worker.fetch(
-    new Request(`http://localhost${pathname}`, { headers: { accept: "text/html" } }),
-    { ASSETS: { fetch: async () => new Response("Not found", { status: 404 }) } },
-    { waitUntil() {}, passThroughOnException() {} },
-  );
+  return fetch(`${origin}${pathname}`, { redirect: "manual" });
 }
 
 test("server-renders the branded homepage", async () => {
@@ -175,7 +202,7 @@ test("every public internal link resolves without carrying over legacy vendor pr
     for (const match of html.matchAll(/<a\b[^>]*href="([^"]+)"/g)) {
       const href = match[1].replaceAll("&amp;", "&");
       if (href.startsWith("/") && !href.startsWith("/admin") && !href.startsWith("/api/")) {
-        discovered.add(new URL(href, "http://localhost").pathname);
+        discovered.add(new URL(href, origin).pathname);
       }
     }
   }
@@ -186,31 +213,24 @@ test("every public internal link resolves without carrying over legacy vendor pr
   }
 });
 
-test("database migrations preserve subscriber state and install the required schema gate", () => {
-  const database = new DatabaseSync(":memory:");
-  applyMigration(database, "0000_narrow_ironclad.sql");
-  applyMigration(database, "0001_empty_wolf_cub.sql");
-  applyMigration(database, "0002_glossy_kang.sql");
-  database.exec(`INSERT INTO subscribers (
-    id, created_at, updated_at, first_name, email, active,
-    consent_version, consented_at, source, client_hash, unsubscribed_at
-  ) VALUES
-    ('active', 1, 2, 'A', 'active@example.test', 1, 'legacy', 2, 'test', 'a', NULL),
-    ('pending', 1, 2, 'P', 'pending@example.test', 0, 'legacy', 2, 'test', 'p', NULL),
-    ('stopped', 1, 2, 'S', 'stopped@example.test', 0, 'legacy', 2, 'test', 's', 3)`);
-  applyMigration(database, "0003_previous_aqueduct.sql");
-  applyMigration(database, "0004_black_captain_universe.sql");
+test("keeps the standalone Railway build and secure admin login available", async () => {
+  const login = await render("/admin/login");
+  assert.equal(login.status, 200);
+  const loginHtml = await login.text();
+  assert.match(loginHtml, /Continue with GitHub/);
 
-  assert.deepEqual(
-    database.prepare("SELECT id, status FROM subscribers ORDER BY id").all().map((row) => ({ ...row })),
-    [
-      { id: "active", status: "active" },
-      { id: "pending", status: "pending" },
-      { id: "stopped", status: "unsubscribed" },
-    ],
-  );
-  assert.equal(database.prepare("SELECT version FROM app_schema_state WHERE id = 1").get().version, 4);
-  assert.ok(database.prepare("PRAGMA table_info(subscribers)").all().some((column) => column.name === "confirmation_token_hash"));
-  assert.equal(database.prepare("PRAGMA integrity_check").get().integrity_check, "ok");
-  database.close();
+  const health = await render("/api/health");
+  assert.equal(health.status, 503, "health should fail closed before a database is configured");
+
+  const packageJson = readFileSync(`${projectRoot}/package.json`, "utf8");
+  assert.match(packageJson, /"next"/);
+  assert.doesNotMatch(packageJson, /"vinext"|"wrangler"|"@openai\/sites-vite-plugin"/);
+
+  const railwayConfig = JSON.parse(readFileSync(`${projectRoot}/railway.json`, "utf8"));
+  assert.equal(railwayConfig.deploy.healthcheckPath, "/api/health");
+  assert.deepEqual(railwayConfig.deploy.preDeployCommand, ["pnpm run db:migrate"]);
+
+  const migration = readFileSync(`${projectRoot}/scripts/migrate-postgres.mjs`, "utf8");
+  assert.match(migration, /created_at BIGINT/);
+  assert.match(migration, /app_schema_state/);
 });

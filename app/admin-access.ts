@@ -1,22 +1,14 @@
-import { getChatGPTUser } from "@/app/chatgpt-auth";
-import { runtimeEnv } from "@/db/runtime";
+import { getAdminUser, isAllowedAdmin } from "@/app/admin-auth";
 
-export function isAllowedAdmin(email: string) {
-  const configured = runtimeEnv().ADMIN_EMAILS ?? "";
-  const allowed = configured
-    .split(",")
-    .map((item) => item.trim().toLowerCase())
-    .filter(Boolean);
-  return allowed.includes(email.toLowerCase());
-}
+export { isAllowedAdmin };
 
 export async function getAuthorizedAdmin() {
-  const user = await getChatGPTUser();
+  const user = await getAdminUser();
   return user && isAllowedAdmin(user.email) ? user : null;
 }
 
 export async function authorizeAdminApi(request: Request, mutation = false) {
-  const user = await getChatGPTUser();
+  const user = await getAdminUser();
   if (!user) return { user: null, error: Response.json({ message: "Sign in is required." }, { status: 401 }) };
   if (!isAllowedAdmin(user.email)) {
     return { user: null, error: Response.json({ message: "Administrator access is not authorized." }, { status: 403 }) };

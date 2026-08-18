@@ -43,9 +43,9 @@ export async function POST(request: Request) {
     const originalName = safePdfFilename(file.name);
     const sha256 = await sha256Hex(file);
     const bucket = documentsBucket();
-    await bucket.put(storageKey, file.stream(), {
-      httpMetadata: { contentType: "application/pdf" },
-      customMetadata: { documentId: id },
+    await bucket.put(storageKey, await file.arrayBuffer(), {
+      contentType: "application/pdf",
+      documentId: id,
     });
     try {
       await DB.batch([

@@ -1,8 +1,7 @@
 import Link from "next/link";
 import { BrandShell } from "@/app/_components/BrandShell";
 import { attorneyServiceLabels } from "@/app/_lib/attorney-intake";
-import { isAllowedAdmin } from "@/app/admin-access";
-import { requireChatGPTUser, chatGPTSignOutPath } from "@/app/chatgpt-auth";
+import { adminLogoutPath, requireAdminUser } from "@/app/admin-auth";
 import { ensureDatabase } from "@/db/runtime";
 import { AttorneyIntakeQueue, type AdminAttorneyIntake } from "./AttorneyIntakeQueue";
 import { SubscriberQueue, type AdminSubscriber } from "./SubscriberQueue";
@@ -74,10 +73,7 @@ function serviceList(value: string) {
 }
 
 export default async function AdminPage() {
-  const user = await requireChatGPTUser("/admin");
-  if (!isAllowedAdmin(user.email)) {
-    return <BrandShell><main className="admin-page"><div className="content-wrap narrow"><p className="eyebrow">Restricted</p><h1>Admin access is not authorized</h1><p>Your account is signed in, but it is not on the site administrator allowlist.</p><a className="gold-button inline-button" href={chatGPTSignOutPath("/admin")}>Sign out</a></div></main></BrandShell>;
-  }
+  const user = await requireAdminUser("/admin");
 
   const DB = await ensureDatabase();
   const [leadRows, intakeRows, subscriberRows, subscriberCount, documentCount] = await Promise.all([
@@ -140,7 +136,7 @@ export default async function AdminPage() {
   }));
 
   return <BrandShell><main className="admin-page"><div className="content-wrap">
-    <div className="admin-heading"><div><p className="eyebrow">Secure administration</p><h1>Contorno back office</h1><p>Signed in as {user.email}</p></div><a href={chatGPTSignOutPath("/")}>Sign out</a></div>
+    <div className="admin-heading"><div><p className="eyebrow">Secure administration</p><h1>Contorno back office</h1><p>Signed in as {user.email}</p></div><a href={adminLogoutPath("/")}>Sign out</a></div>
     <nav className="admin-section-nav" aria-label="Back-office sections"><a href="#attorney-intakes">Attorney intakes</a><Link href="/admin/documents">PDF document center</Link><a href="#general-inquiries">General inquiries</a><a href="#update-requests">Update requests</a></nav>
     <div className="stat-grid admin-stat-grid">
       <article><strong>{newAttorneyCount}</strong><span>New attorney intakes</span></article>

@@ -77,7 +77,7 @@ export function DocumentCenter({ documents, intakes }: { documents: AdminDocumen
   return (
     <div className="document-center">
       <section className="document-upload-card" aria-labelledby="upload-heading">
-        <div><p className="eyebrow">Private R2 storage</p><h2 id="upload-heading">Add a PDF</h2><p>PDF only, up to 15 MB. Files remain private and are delivered only through authenticated back-office routes.</p></div>
+        <div><p className="eyebrow">Private document storage</p><h2 id="upload-heading">Add a PDF</h2><p>PDF only, up to 15 MB. Files remain private and are delivered only through authenticated back-office routes.</p></div>
         <form className="lead-form" onSubmit={upload}>
           <label>Display name<input name="displayName" maxLength={160} placeholder="Example: Case chronology — revised" /></label>
           <label>Associate with attorney intake <span className="optional">Optional</span><select name="intakeId" defaultValue=""><option value="">No intake selected</option>{intakes.map((intake) => <option value={intake.id} key={intake.id}>{intake.referenceCode} — {intake.matterCaption}</option>)}</select></label>

@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { BrandShell } from "@/app/_components/BrandShell";
-import { isAllowedAdmin } from "@/app/admin-access";
-import { requireChatGPTUser, chatGPTSignOutPath } from "@/app/chatgpt-auth";
+import { adminLogoutPath, requireAdminUser } from "@/app/admin-auth";
 import { ensureDatabase } from "@/db/runtime";
 import { DocumentCenter, type AdminDocument, type IntakeOption } from "./DocumentCenter";
 
@@ -20,10 +19,7 @@ type DocumentRow = {
 type IntakeRow = { id: string; reference_code: string; matter_caption: string };
 
 export default async function DocumentsPage() {
-  const user = await requireChatGPTUser("/admin/documents");
-  if (!isAllowedAdmin(user.email)) {
-    return <BrandShell><main className="admin-page"><div className="content-wrap narrow"><p className="eyebrow">Restricted</p><h1>Admin access is not authorized</h1><p>Your account is signed in, but it is not on the site administrator allowlist.</p><a className="gold-button inline-button" href={chatGPTSignOutPath("/admin/documents")}>Sign out</a></div></main></BrandShell>;
-  }
+  const user = await requireAdminUser("/admin/documents");
   const DB = await ensureDatabase();
   const [documentRows, intakeRows] = await Promise.all([
     DB.prepare(`SELECT id, created_at, intake_id, display_name, original_name, size_bytes, uploaded_by_email
@@ -42,7 +38,7 @@ export default async function DocumentsPage() {
   const intakes: IntakeOption[] = intakeRows.results.map((intake) => ({ id: intake.id, referenceCode: intake.reference_code, matterCaption: intake.matter_caption }));
 
   return <BrandShell><main className="admin-page"><div className="content-wrap">
-    <div className="admin-heading"><div><p className="eyebrow">Secure administration</p><h1>PDF document center</h1><p>Signed in as {user.email}</p></div><div className="admin-heading-actions"><Link href="/admin">Back to dashboard</Link><a href={chatGPTSignOutPath("/")}>Sign out</a></div></div>
+    <div className="admin-heading"><div><p className="eyebrow">Secure administration</p><h1>PDF document center</h1><p>Signed in as {user.email}</p></div><div className="admin-heading-actions"><Link href="/admin">Back to dashboard</Link><a href={adminLogoutPath("/")}>Sign out</a></div></div>
     <DocumentCenter documents={documents} intakes={intakes} />
   </div></main></BrandShell>;
 }
