@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { serviceLinks } from "@/app/_lib/site-links";
+import { serviceLinks, siteRoutes } from "@/app/_lib/site-links";
 
 export function PrimaryNavigation({ showBrand = false }: { showBrand?: boolean }) {
   return (
@@ -13,33 +13,30 @@ export function PrimaryNavigation({ showBrand = false }: { showBrand?: boolean }
         )}
         <div className="desktop-primary-nav">
           <nav className="site-nav" aria-label="Primary navigation">
-            <Link href="/">Home</Link>
-            <Link href="/about">About Us</Link>
-            <details className="services-menu">
-              <summary>Services</summary>
-              <div className="services-menu-panel">
-                {serviceLinks.map((service) => <Link key={service.href} href={service.href}>{service.label}</Link>)}
-              </div>
-            </details>
-            <Link href="/faq">Q&amp;A</Link>
-            <Link href="/contact">Contact</Link>
+            <Link href={siteRoutes.home}>Home</Link>
+            <Link href={siteRoutes.about}>About Us</Link>
+            <Link href={siteRoutes.services}>Services</Link>
+            <Link href={siteRoutes.mediaGallery}>Media Gallery</Link>
+            <Link href={siteRoutes.faq}>Q&amp;A</Link>
+            <Link href={siteRoutes.contact}>Contact</Link>
           </nav>
-          <Link className="header-cta" href="/contact">Request a consultation</Link>
+          <Link className="header-cta" href={siteRoutes.contact}>Request a consultation</Link>
         </div>
         <details className="mobile-primary-menu">
           <summary>Menu</summary>
           <nav aria-label="Mobile primary navigation">
-            <Link href="/">Home</Link>
-            <Link href="/about">About Us</Link>
-            <span>Services</span>
+            <Link href={siteRoutes.home}>Home</Link>
+            <Link href={siteRoutes.about}>About Us</Link>
+            <Link href={siteRoutes.services}>Services</Link>
             {serviceLinks.map((service) => <Link className="mobile-service-link" key={service.href} href={service.href}>{service.label}</Link>)}
-            <Link href="/faq">Q&amp;A</Link>
-            <Link href="/contact">Contact</Link>
-            <Link className="header-cta" href="/contact">Request a consultation</Link>
+            <Link href={siteRoutes.mediaGallery}>Media Gallery</Link>
+            <Link href={siteRoutes.faq}>Q&amp;A</Link>
+            <Link href={siteRoutes.contact}>Contact</Link>
+            <Link className="header-cta" href={siteRoutes.contact}>Request a consultation</Link>
           </nav>
         </details>
       </div>
-      <Link className="announcement-bar" href="/services/bail-bonds"><strong>Ratchet Bail Bonds</strong><span>Coming Soon</span></Link>
+      <Link className="announcement-bar" href={siteRoutes.bailBonds}><strong>Ratchet Bail Bonds</strong><span>Coming Soon</span></Link>
     </>
   );
 }

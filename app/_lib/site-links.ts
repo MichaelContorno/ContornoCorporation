@@ -3,6 +3,8 @@ export const SITE_ORIGIN = "https://contornocorporation.com";
 export const siteRoutes = {
   home: "/",
   about: "/about",
+  services: "/services",
+  mediaGallery: "/media-gallery",
   attorneyIntake: "/attorney-intake",
   contact: "/contact",
   faq: "/faq",
@@ -16,6 +18,8 @@ export const siteRoutes = {
 export const companyLinks = [
   { href: siteRoutes.home, label: "Home" },
   { href: siteRoutes.about, label: "About Us" },
+  { href: siteRoutes.services, label: "Services" },
+  { href: siteRoutes.mediaGallery, label: "Media Gallery" },
   { href: siteRoutes.faq, label: "Q&A" },
   { href: siteRoutes.contact, label: "Contact" },
 ] as const;
@@ -35,6 +39,8 @@ export const policyLinks = [
 export const publicSitePaths = [
   siteRoutes.home,
   siteRoutes.about,
+  siteRoutes.services,
+  siteRoutes.mediaGallery,
   siteRoutes.attorneyIntake,
   siteRoutes.contact,
   siteRoutes.faq,

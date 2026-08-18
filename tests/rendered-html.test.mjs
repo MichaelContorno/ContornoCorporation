@@ -36,6 +36,7 @@ test("server-renders the branded homepage", async () => {
   assert.match(html, />Community Association Management</);
   assert.match(html, />Attorney Case Intake</);
   assert.match(html, /About Us/);
+  assert.match(html, /Media Gallery/);
   assert.match(html, /Q&amp;A/);
   assert.match(html, /Request a consultation/);
   assert.doesNotMatch(html, /codex-preview|react-loading-skeleton|Your site is taking shape/i);
@@ -75,6 +76,23 @@ test("server-renders About Us and Questions & Answers routes", async () => {
   assert.match(faqHtml, /Clear answers before you get started/);
   assert.match(faqHtml, /What does The Contorno Corporation do\?/);
   assert.match(faqHtml, /application\/ld\+json/);
+});
+
+test("server-renders Services and the Media Gallery", async () => {
+  const services = await render("/services");
+  assert.equal(services.status, 200);
+  const servicesHtml = await services.text();
+  assert.match(servicesHtml, /One organization\. Three distinct lines of service\./);
+  assert.match(servicesHtml, /href="\/services\/investigations"/);
+  assert.match(servicesHtml, /href="\/services\/bail-bonds"/);
+  assert.match(servicesHtml, /href="\/services\/community-management"/);
+
+  const gallery = await render("/media-gallery");
+  assert.equal(gallery.status, 200);
+  const galleryHtml = await gallery.text();
+  assert.match(galleryHtml, /The visual world of The Contorno Corporation/);
+  assert.match(galleryHtml, /Official visual library/);
+  assert.match(galleryHtml, /og\.png/);
 });
 
 test("server-renders the structured attorney intake workflow", async () => {
@@ -136,6 +154,8 @@ test("every public internal link resolves without carrying over legacy vendor pr
   const entryRoutes = [
     "/",
     "/about",
+    "/services",
+    "/media-gallery",
     "/attorney-intake",
     "/contact",
     "/faq",
