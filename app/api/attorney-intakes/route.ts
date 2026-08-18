@@ -5,6 +5,7 @@ import {
   submitterRoles,
   urgencyOptions,
 } from "@/app/_lib/attorney-intake";
+import { readPublicJson } from "@/app/_lib/public-json";
 import { cleanString, clientHash, ensureDatabase, validEmail } from "@/db/runtime";
 
 const CONSENT_VERSION = "attorney-intake-2026-08-18";
@@ -25,20 +26,9 @@ function referenceCode() {
 
 export async function POST(request: Request) {
   try {
-    const contentType = request.headers.get("content-type") ?? "";
-    const contentLength = Number(request.headers.get("content-length") ?? 0);
-    const origin = request.headers.get("origin");
-    if (!contentType.toLowerCase().startsWith("application/json")) {
-      return Response.json({ message: "This intake must be submitted from the secure website form." }, { status: 415 });
-    }
-    if (contentLength > MAX_REQUEST_BYTES) {
-      return Response.json({ message: "The intake is too large. Please shorten the narrative fields." }, { status: 413 });
-    }
-    if (origin && origin !== new URL(request.url).origin) {
-      return Response.json({ message: "This intake must be submitted from the secure website form." }, { status: 403 });
-    }
-
-    const body = await request.json() as Record<string, unknown>;
+    const parsed = await readPublicJson(request, MAX_REQUEST_BYTES);
+    if (parsed.response) return parsed.response;
+    const body = parsed.body;
     if (cleanString(body.website, 120)) {
       return Response.json({ referenceCode: "CTN-RECEIVED", message: "Your intake request has been received." }, { status: 201 });
     }
@@ -101,8 +91,12 @@ export async function POST(request: Request) {
 
     const DB = await ensureDatabase();
     const hash = await clientHash(request);
-    const hourCutoff = Date.now() - 60 * 60 * 1000;
-    const dayCutoff = Date.now() - 24 * 60 * 60 * 1000;
+    const now = Date.now();
+    const hourCutoff = now - 60 * 60 * 1000;
+    const dayCutoff = now - 24 * 60 * 60 * 1000;
+    const clientHashCutoff = now - 48 * 60 * 60 * 1000;
+    await DB.prepare("UPDATE attorney_intakes SET client_hash = '' WHERE client_hash <> '' AND created_at < ?")
+      .bind(clientHashCutoff).run();
     const [recentClient, recentEmail] = await Promise.all([
       DB.prepare("SELECT COUNT(*) AS count FROM attorney_intakes WHERE client_hash = ? AND created_at >= ?").bind(hash, hourCutoff).first<{ count: number }>(),
       DB.prepare("SELECT COUNT(*) AS count FROM attorney_intakes WHERE email = ? AND created_at >= ?").bind(email, dayCutoff).first<{ count: number }>(),
@@ -111,7 +105,6 @@ export async function POST(request: Request) {
       return Response.json({ message: "We have received your recent intake requests. Please allow the team time to review them." }, { status: 429 });
     }
 
-    const now = Date.now();
     const id = crypto.randomUUID();
     const reference = referenceCode();
     const retentionReviewAt = now + 180 * 24 * 60 * 60 * 1000;

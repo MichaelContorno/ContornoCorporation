@@ -1,8 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { FormEvent, useRef, useState } from "react";
 import { attorneyServiceOptions } from "@/app/_lib/attorney-intake";
+import { FormPolicyNotice } from "./FormPolicyNotice";
 
 type IntakeResult = { message?: string; referenceCode?: string };
 
@@ -123,7 +123,10 @@ export function AttorneyIntakeForm() {
       </fieldset>
 
       <div className="honeypot" aria-hidden="true"><label>Website<input name="website" aria-label="Leave this field empty" tabIndex={-1} autoComplete="off" /></label></div>
-      <label className="consent"><input name="consent" type="checkbox" value="yes" required /> <span>I confirm that I am an attorney or authorized law-firm representative; I have reviewed the <Link href="/privacy">Privacy Policy</Link>; and I understand that submission does not create a professional engagement, obligate The Contorno Corporation to act, or provide emergency or deadline monitoring.</span></label>
+      <div className="consent-block">
+        <label className="consent"><input name="consent" type="checkbox" value="yes" required /> <span>I confirm that I am an attorney or authorized law-firm representative, and I understand that submission does not create a professional engagement, obligate The Contorno Corporation to act, or provide emergency or deadline monitoring.</span></label>
+        <FormPolicyNotice />
+      </div>
       <button className="gold-button" type="submit" disabled={busy}>{busy ? "Submitting securely…" : "Submit attorney intake"}</button>
       {result && <div className="intake-result" ref={statusRef} tabIndex={-1} role="status">
         {result.referenceCode && result.referenceCode !== "CTN-RECEIVED" && <strong>Reference: {result.referenceCode}</strong>}

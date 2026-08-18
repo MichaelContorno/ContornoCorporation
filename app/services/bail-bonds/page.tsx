@@ -12,6 +12,8 @@ export default function BailBondsPage() {
     title="Responsive bail bond support, coming soon"
     status="Coming soon"
     intro="Ratchet Bail Bonds is being established to provide clear, responsive support when families need to understand the release process and act quickly."
+    ctaHref="/contact?service=bail-bonds"
+    ctaLabel="Request launch updates"
     highlights={[
       { title: "Fast initial response", text: "A structured intake designed to collect the essential case, facility, and indemnitor information without unnecessary delay." },
       { title: "Plain-language guidance", text: "Clear explanations of the bond process, responsibilities, required documentation, and next steps." },

@@ -11,6 +11,8 @@ export default function CommunityManagementPage() {
     eyebrow="Contorno Community Association Management"
     title="Disciplined management for stronger communities"
     intro="We help condominium and community associations operate with clearer communication, consistent processes, responsible oversight, and a long-term view of property value."
+    ctaHref="/contact?service=community-management"
+    ctaLabel="Request an association consultation"
     highlights={[
       { title: "Board support", text: "Meeting preparation, action tracking, governance calendars, and clear reporting that help volunteer boards make informed decisions." },
       { title: "Resident communication", text: "Consistent notices, request handling, issue routing, and service updates designed to reduce confusion and improve trust." },

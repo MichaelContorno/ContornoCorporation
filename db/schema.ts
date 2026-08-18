@@ -13,18 +13,44 @@ export const leads = sqliteTable("leads", {
   message: text("message").notNull(),
   source: text("source").notNull().default("website"),
   clientHash: text("client_hash").notNull(),
+  consentVersion: text("consent_version").notNull(),
+  consentedAt: integer("consented_at").notNull(),
 }, (table) => [
   index("idx_leads_created_at").on(table.createdAt),
   index("idx_leads_status_created_at").on(table.status, table.createdAt),
+  index("idx_leads_client_created_at").on(table.clientHash, table.createdAt),
+  index("idx_leads_email_created_at").on(table.email, table.createdAt),
 ]);
 
 export const subscribers = sqliteTable("subscribers", {
   id: text("id").primaryKey(),
   createdAt: integer("created_at").notNull(),
+  updatedAt: integer("updated_at").notNull(),
   firstName: text("first_name").notNull(),
   email: text("email").notNull(),
-  active: integer("active", { mode: "boolean" }).notNull().default(true),
-}, (table) => [uniqueIndex("idx_subscribers_email").on(table.email)]);
+  active: integer("active", { mode: "boolean" }).notNull().default(false),
+  status: text("status").notNull().default("pending"),
+  consentVersion: text("consent_version").notNull(),
+  consentedAt: integer("consented_at").notNull(),
+  source: text("source").notNull().default("website-updates"),
+  clientHash: text("client_hash").notNull(),
+  unsubscribedAt: integer("unsubscribed_at"),
+  confirmationTokenHash: text("confirmation_token_hash"),
+  confirmationExpiresAt: integer("confirmation_expires_at"),
+  verifiedAt: integer("verified_at"),
+  verificationMethod: text("verification_method").notNull().default(""),
+}, (table) => [
+  uniqueIndex("idx_subscribers_email").on(table.email),
+  uniqueIndex("idx_subscribers_confirmation_token").on(table.confirmationTokenHash),
+  index("idx_subscribers_client_updated_at").on(table.clientHash, table.updatedAt),
+  index("idx_subscribers_status_updated_at").on(table.status, table.updatedAt),
+]);
+
+export const appSchemaState = sqliteTable("app_schema_state", {
+  id: integer("id").primaryKey(),
+  version: integer("version").notNull(),
+  updatedAt: integer("updated_at").notNull(),
+});
 
 export const assistantRequests = sqliteTable("assistant_requests", {
   id: text("id").primaryKey(),

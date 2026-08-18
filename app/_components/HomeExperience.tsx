@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { FormEvent, useEffect, useRef, useState } from "react";
+import { siteRoutes } from "@/app/_lib/site-links";
+import { FormPolicyNotice } from "./FormPolicyNotice";
 import { PrimaryNavigation } from "./PrimaryNavigation";
 
 type Panel = "lead" | "assistant" | "subscribe" | null;
@@ -10,17 +12,17 @@ type ChatMessage = { role: "user" | "assistant"; text: string };
 const serviceLinks = [
   {
     label: "Learn about criminal defense investigations",
-    href: "/services/investigations",
+    href: siteRoutes.investigations,
     className: "hotspot-investigations",
   },
   {
     label: "Learn about Ratchet Bail Bonds",
-    href: "/services/bail-bonds",
+    href: siteRoutes.bailBonds,
     className: "hotspot-bail",
   },
   {
     label: "Learn about community association management",
-    href: "/services/community-management",
+    href: siteRoutes.communityManagement,
     className: "hotspot-management",
   },
 ] as const;
@@ -67,7 +69,7 @@ export function HomeExperience() {
 
   async function submitSubscription(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setNotice("Adding you to the update list…");
+    setNotice("Recording your update request…");
     const form = event.currentTarget;
     const response = await fetch("/api/subscribe", {
       method: "POST",
@@ -75,7 +77,7 @@ export function HomeExperience() {
       body: JSON.stringify(Object.fromEntries(new FormData(form))),
     });
     const result = (await response.json()) as { message?: string };
-    setNotice(result.message ?? (response.ok ? "You’re subscribed." : "Please try again."));
+    setNotice(result.message ?? (response.ok ? "Your request is pending confirmation." : "Please try again."));
     if (response.ok) form.reset();
   }
 
@@ -153,7 +155,7 @@ export function HomeExperience() {
         ))}
         <button
           className="design-hotspot hotspot-subscribe"
-          aria-label="Subscribe for Contorno Corporation updates"
+          aria-label="Request Contorno Corporation updates"
           onClick={() => openPanel("subscribe")}
         />
         <Link className="design-hotspot hotspot-privacy" href="/privacy" aria-label="Privacy policy" />
@@ -213,17 +215,25 @@ export function HomeExperience() {
                   <input id="assistant-message" name="message" placeholder="How can we help?" maxLength={800} autoComplete="off" required />
                   <button type="submit" disabled={chatBusy}>Send</button>
                 </form>
+                <FormPolicyNotice>Use of the concierge is subject to our</FormPolicyNotice>
+                <p className="form-legal">Do not send evidence or privileged material.</p>
                 <button className="text-action" onClick={() => openPanel("lead")}>Request a confidential callback instead</button>
               </>
             )}
             {panel === "subscribe" && (
               <>
                 <p className="eyebrow">Stay informed</p>
-                <h2 id="dialog-title">Sign up for updates and news</h2>
+                <h2 id="dialog-title">Request updates and news</h2>
+                <p className="modal-intro">Your request remains pending until you use the one-time confirmation link sent by our team. Unverified addresses are not added to the active update list.</p>
                 <form className="lead-form" onSubmit={submitSubscription}>
                   <label>First name<input name="firstName" maxLength={80} autoComplete="given-name" required /></label>
                   <label>Email<input name="email" type="email" maxLength={160} autoComplete="email" required /></label>
-                  <button className="gold-button" type="submit">Subscribe</button>
+                  <div className="honeypot" aria-hidden="true"><label>Website<input name="website" aria-label="Leave this field empty" tabIndex={-1} autoComplete="off" /></label></div>
+                  <div className="consent-block">
+                    <label className="consent"><input name="consent" type="checkbox" value="yes" required /> <span>I agree to receive updates from The Contorno Corporation after my email address is confirmed.</span></label>
+                    <FormPolicyNotice />
+                  </div>
+                  <button className="gold-button" type="submit">Request updates</button>
                 </form>
               </>
             )}
@@ -256,7 +266,11 @@ function LeadForm({ onSubmit }: { onSubmit: (event: FormEvent<HTMLFormElement>) 
         </select>
       </label>
       <label>Brief description<textarea name="message" rows={4} maxLength={2000} required /></label>
-      <label className="consent"><input name="consent" type="checkbox" value="yes" required /> I consent to be contacted about this request.</label>
+      <div className="honeypot" aria-hidden="true"><label>Website<input name="website" aria-label="Leave this field empty" tabIndex={-1} autoComplete="off" /></label></div>
+      <div className="consent-block">
+        <label className="consent"><input name="consent" type="checkbox" value="yes" required /> <span>I consent to be contacted about this request.</span></label>
+        <FormPolicyNotice />
+      </div>
       <button className="gold-button" type="submit">Submit confidential request</button>
     </form>
   );

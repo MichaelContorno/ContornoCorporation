@@ -2,8 +2,11 @@
 
 import Link from "next/link";
 import { FormEvent, useState } from "react";
+import { FormPolicyNotice } from "./FormPolicyNotice";
 
-export function ContactForm() {
+type ContactService = "investigations" | "bail-bonds" | "community-management" | "general";
+
+export function ContactForm({ defaultService = "investigations" }: { defaultService?: ContactService }) {
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -41,14 +44,18 @@ export function ContactForm() {
         <label>Email<input name="email" type="email" maxLength={160} autoComplete="email" required /></label>
         <label>Phone<input name="phone" type="tel" maxLength={30} autoComplete="tel" required /></label>
       </div>
-      <label>Service needed<select name="service" defaultValue="investigations" required>
+      <label>Service needed<select name="service" defaultValue={defaultService} required>
         <option value="investigations">Private investigations / criminal defense analysis</option>
         <option value="bail-bonds">Ratchet Bail Bonds - coming soon</option>
         <option value="community-management">Community association management</option>
         <option value="general">General inquiry</option>
       </select></label>
       <label>How can we help?<textarea name="message" rows={6} maxLength={2000} required /></label>
-      <label className="consent"><input name="consent" type="checkbox" value="yes" required /> I consent to be contacted about this request.</label>
+      <div className="honeypot" aria-hidden="true"><label>Website<input name="website" aria-label="Leave this field empty" tabIndex={-1} autoComplete="off" /></label></div>
+      <div className="consent-block">
+        <label className="consent"><input name="consent" type="checkbox" value="yes" required /> <span>I consent to be contacted about this request.</span></label>
+        <FormPolicyNotice />
+      </div>
       <button className="gold-button" type="submit" disabled={busy}>{busy ? "Submitting…" : "Submit confidential request"}</button>
       {notice && <p className="form-notice" role="status">{notice}</p>}
       </form>

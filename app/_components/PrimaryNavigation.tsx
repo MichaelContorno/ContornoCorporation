@@ -1,11 +1,5 @@
 import Link from "next/link";
-
-const services = [
-  { href: "/services/investigations", label: "Investigations" },
-  { href: "/attorney-intake", label: "Attorney Case Intake" },
-  { href: "/services/bail-bonds", label: "Bail Bonds" },
-  { href: "/services/community-management", label: "Community Association Management" },
-] as const;
+import { serviceLinks } from "@/app/_lib/site-links";
 
 export function PrimaryNavigation({ showBrand = false }: { showBrand?: boolean }) {
   return (
@@ -24,7 +18,7 @@ export function PrimaryNavigation({ showBrand = false }: { showBrand?: boolean }
             <details className="services-menu">
               <summary>Services</summary>
               <div className="services-menu-panel">
-                {services.map((service) => <Link key={service.href} href={service.href}>{service.label}</Link>)}
+                {serviceLinks.map((service) => <Link key={service.href} href={service.href}>{service.label}</Link>)}
               </div>
             </details>
             <Link href="/faq">Q&amp;A</Link>
@@ -38,7 +32,7 @@ export function PrimaryNavigation({ showBrand = false }: { showBrand?: boolean }
             <Link href="/">Home</Link>
             <Link href="/about">About Us</Link>
             <span>Services</span>
-            {services.map((service) => <Link className="mobile-service-link" key={service.href} href={service.href}>{service.label}</Link>)}
+            {serviceLinks.map((service) => <Link className="mobile-service-link" key={service.href} href={service.href}>{service.label}</Link>)}
             <Link href="/faq">Q&amp;A</Link>
             <Link href="/contact">Contact</Link>
             <Link className="header-cta" href="/contact">Request a consultation</Link>

@@ -7,7 +7,16 @@ export const metadata: Metadata = {
   description: "Request a confidential consultation with The Contorno Corporation.",
 };
 
-export default function ContactPage() {
+type ContactService = "investigations" | "bail-bonds" | "community-management" | "general";
+
+const contactServices = new Set<ContactService>(["investigations", "bail-bonds", "community-management", "general"]);
+
+export default async function ContactPage({ searchParams }: { searchParams: Promise<{ service?: string | string[] }> }) {
+  const requestedService = (await searchParams).service;
+  const defaultService = typeof requestedService === "string" && contactServices.has(requestedService as ContactService)
+    ? requestedService as ContactService
+    : "investigations";
+
   return (
     <BrandShell>
       <main className="content-section contact-page">
@@ -21,7 +30,7 @@ export default function ContactPage() {
               <p>Do not include Social Security numbers, payment details, evidence files, privileged documents, or sensitive medical information. Neither form creates a professional relationship or is monitored for emergencies or filing deadlines.</p>
             </div>
           </section>
-          <ContactForm />
+          <ContactForm defaultService={defaultService} />
         </div>
       </main>
     </BrandShell>

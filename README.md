@@ -14,7 +14,7 @@ The homepage uses the approved PDF artwork as its exact visual source, with acce
 - Conventional site navigation with About Us and Questions & Answers pages
 - Confidential lead intake with validation and rate limiting
 - Dedicated defense-attorney intake with conflict-screening fields, structured scope and timing, reference codes, validation, and rate limiting
-- Newsletter signup
+- Verified update-list requests with one-time confirmation links and unsubscribe controls
 - AI concierge with a safe non-AI fallback when no API key is configured
 - D1-backed lead and subscriber storage
 - Protected back office with ChatGPT sign-in, an administrator allowlist, attorney-intake workflow statuses, and general lead review
@@ -40,10 +40,12 @@ The site runs at `http://localhost:3000`.
 - `ADMIN_EMAILS`: comma-separated email addresses permitted to open `/admin`
 - `OPENAI_API_KEY`: server-side OpenAI project key for the AI concierge
 - `OPENAI_MODEL`: optional model override; defaults to `gpt-5.6-luna`
+- `RATE_LIMIT_SECRET`: a stable, random 64-character secret used to create rotating abuse-prevention tokens; public forms fail closed when it is absent
 - D1 binding named `DB`
 - Private R2 binding named `DOCUMENTS`
 
 Never expose `OPENAI_API_KEY` in client-side code or commit a populated environment file.
+Replace the sample `RATE_LIMIT_SECRET` before starting locally. Deployments must apply every migration in `drizzle/` before activating the new worker; the application verifies the required schema version before serving database-backed routes.
 
 ## Quality checks
 

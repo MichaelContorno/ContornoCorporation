@@ -1,5 +1,15 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { DatabaseSync } from "node:sqlite";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
+
+const projectRoot = fileURLToPath(new URL("..", import.meta.url));
+
+function applyMigration(database, name) {
+  const sql = readFileSync(`${projectRoot}/drizzle/${name}`, "utf8").replaceAll("--> statement-breakpoint", "");
+  database.exec(sql);
+}
 
 async function render(pathname) {
   const workerUrl = new URL("../dist/server/index.js", import.meta.url);
@@ -44,6 +54,12 @@ test("server-renders detailed branded service routes", async () => {
   const bondsHtml = await bonds.text();
   assert.match(bondsHtml, /Coming soon/);
   assert.match(bondsHtml, /not currently accepting or posting bonds/i);
+  assert.match(bondsHtml, /href="\/contact\?service=bail-bonds"/);
+
+  const community = await render("/services/community-management");
+  assert.equal(community.status, 200);
+  const communityHtml = await community.text();
+  assert.match(communityHtml, /href="\/contact\?service=community-management"/);
 });
 
 test("server-renders About Us and Questions & Answers routes", async () => {
@@ -76,4 +92,105 @@ test("server-renders the structured attorney intake workflow", async () => {
   const investigationHtml = await investigation.text();
   assert.match(investigationHtml, /href="\/attorney-intake"/);
   assert.match(investigationHtml, /Start attorney case intake/);
+});
+
+test("keeps service, contact, and policy links discoverable", async () => {
+  const contact = await render("/contact");
+  assert.equal(contact.status, 200);
+  const contactHtml = await contact.text();
+  assert.match(contactHtml, /href="\/privacy"/);
+  assert.match(contactHtml, /href="\/terms"/);
+
+  const about = await render("/about");
+  const aboutHtml = await about.text();
+  assert.match(aboutHtml, /aria-label="Service links"/);
+  assert.match(aboutHtml, /href="\/services\/investigations"/);
+  assert.match(aboutHtml, /href="\/services\/bail-bonds"/);
+  assert.match(aboutHtml, /href="\/services\/community-management"/);
+  assert.match(aboutHtml, /href="\/contact"/);
+});
+
+test("publishes a public sitemap while keeping private routes out of search", async () => {
+  const sitemap = await render("/sitemap.xml");
+  assert.equal(sitemap.status, 200);
+  const sitemapXml = await sitemap.text();
+  assert.match(sitemapXml, /https:\/\/contornocorporation\.com\/services\/investigations/);
+  assert.doesNotMatch(sitemapXml, /\/admin|\/api\//);
+
+  const robots = await render("/robots.txt");
+  assert.equal(robots.status, 200);
+  const robotsText = await robots.text();
+  assert.match(robotsText, /Disallow: \/api\//);
+  assert.doesNotMatch(robotsText, /Disallow: \/admin/);
+  assert.match(robotsText, /Sitemap: https:\/\/contornocorporation\.com\/sitemap\.xml/);
+
+  const confirmation = await render("/updates/confirm");
+  assert.equal(confirmation.status, 200);
+  const confirmationHtml = await confirmation.text();
+  assert.match(confirmationHtml, /opening this page does not subscribe you/i);
+  assert.match(confirmationHtml, /name="robots" content="noindex, nofollow, nocache"/i);
+  assert.match(confirmationHtml, /name="referrer" content="no-referrer"/i);
+});
+
+test("every public internal link resolves without carrying over legacy vendor promotions", async () => {
+  const entryRoutes = [
+    "/",
+    "/about",
+    "/attorney-intake",
+    "/contact",
+    "/faq",
+    "/privacy",
+    "/services/bail-bonds",
+    "/services/community-management",
+    "/services/investigations",
+    "/terms",
+  ];
+  const discovered = new Set();
+
+  for (const pathname of entryRoutes) {
+    const response = await render(pathname);
+    assert.equal(response.status, 200, `${pathname} should render successfully`);
+    const html = await response.text();
+    assert.doesNotMatch(html, /(?:ms\.)?godaddy\.com|website-builder\?isc=pwugc/i);
+    for (const match of html.matchAll(/<a\b[^>]*href="([^"]+)"/g)) {
+      const href = match[1].replaceAll("&amp;", "&");
+      if (href.startsWith("/") && !href.startsWith("/admin") && !href.startsWith("/api/")) {
+        discovered.add(new URL(href, "http://localhost").pathname);
+      }
+    }
+  }
+
+  for (const pathname of discovered) {
+    const response = await render(pathname);
+    assert.equal(response.status, 200, `linked route ${pathname} should render successfully`);
+  }
+});
+
+test("database migrations preserve subscriber state and install the required schema gate", () => {
+  const database = new DatabaseSync(":memory:");
+  applyMigration(database, "0000_narrow_ironclad.sql");
+  applyMigration(database, "0001_empty_wolf_cub.sql");
+  applyMigration(database, "0002_glossy_kang.sql");
+  database.exec(`INSERT INTO subscribers (
+    id, created_at, updated_at, first_name, email, active,
+    consent_version, consented_at, source, client_hash, unsubscribed_at
+  ) VALUES
+    ('active', 1, 2, 'A', 'active@example.test', 1, 'legacy', 2, 'test', 'a', NULL),
+    ('pending', 1, 2, 'P', 'pending@example.test', 0, 'legacy', 2, 'test', 'p', NULL),
+    ('stopped', 1, 2, 'S', 'stopped@example.test', 0, 'legacy', 2, 'test', 's', 3)`);
+  applyMigration(database, "0003_previous_aqueduct.sql");
+  applyMigration(database, "0004_black_captain_universe.sql");
+
+  assert.deepEqual(
+    database.prepare("SELECT id, status FROM subscribers ORDER BY id").all().map((row) => ({ ...row })),
+    [
+      { id: "active", status: "active" },
+      { id: "pending", status: "pending" },
+      { id: "stopped", status: "unsubscribed" },
+    ],
+  );
+  assert.equal(database.prepare("SELECT version FROM app_schema_state WHERE id = 1").get().version, 4);
+  assert.ok(database.prepare("PRAGMA table_info(subscribers)").all().some((column) => column.name === "confirmation_token_hash"));
+  assert.equal(database.prepare("PRAGMA integrity_check").get().integrity_check, "ok");
+  database.close();
 });

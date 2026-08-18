@@ -258,6 +258,10 @@ h1, h2, h3 {
 
 .lead-form .consent { display: flex; grid-template-columns: none; align-items: flex-start; gap: 10px; line-height: 1.45; }
 .lead-form .consent input { width: 18px; min-height: 18px; margin-top: 1px; }
+.consent-block { display: grid; gap: 6px; }
+.consent-block .form-legal { margin: 0 0 0 28px; }
+.lead-form .consent a, .form-legal a, .legal-page a { color: #efb85b; text-underline-offset: 3px; }
+.form-legal { margin: 12px 0 0; color: #aaa69f; font-size: 0.78rem; line-height: 1.55; }
 
 .gold-button {
   display: inline-grid;
@@ -445,11 +449,17 @@ h1, h2, h3 {
 .license-band { padding: 34px 0; border-top: 1px solid #8f641f; background: #01060c; }
 .license-band p { margin: 0; color: #aaa69f; font-size: 0.86rem; line-height: 1.6; }
 
-.site-footer { display: grid; justify-items: center; gap: 9px; padding: 42px 20px; border-top: 1px solid rgba(197, 139, 43, 0.48); background: #01070d; text-align: center; }
+.site-footer { display: grid; justify-items: center; gap: 28px; padding: 52px 20px 32px; border-top: 1px solid rgba(197, 139, 43, 0.48); background: #01070d; }
 .site-footer p { margin: 0; color: #bcb8b0; }
-.site-footer p:first-child { color: #e2ad50; font-family: Georgia, serif; font-size: 1.45rem; letter-spacing: 0.08em; text-transform: uppercase; }
-.site-footer div { display: flex; width: 100%; flex-wrap: wrap; justify-content: center; gap: 14px 22px; margin-top: 14px; }
-.site-footer a { color: #b9b5ad; font-size: 0.75rem; letter-spacing: 0.12em; text-decoration: none; text-transform: uppercase; }
+.footer-brand { display: grid; gap: 8px; text-align: center; }
+.footer-brand p:first-child { color: #e2ad50; font-family: Georgia, serif; font-size: 1.45rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.footer-link-grid { display: grid; width: min(980px, 100%); grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(24px, 6vw, 70px); padding: 28px 0; border-block: 1px solid rgba(197, 139, 43, 0.22); }
+.footer-link-grid nav { display: grid; align-content: start; gap: 10px; }
+.footer-link-grid h2 { margin: 0 0 5px; color: #e3ad51; font-family: "Avenir Next", Avenir, sans-serif; font-size: 0.68rem; font-weight: 750; letter-spacing: 0.16em; text-transform: uppercase; }
+.site-footer a { color: #b9b5ad; font-size: 0.72rem; letter-spacing: 0.08em; line-height: 1.45; text-decoration: none; text-transform: uppercase; }
+.site-footer a:hover { color: #f0c16f; }
+.site-footer a:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+.footer-copyright { color: #8f8b84 !important; font-size: 0.72rem; text-align: center; }
 
 .contact-page { min-height: 70vh; }
 .contact-layout { display: grid; grid-template-columns: 0.9fr 1.1fr; gap: clamp(40px, 8vw, 110px); align-items: start; }
@@ -590,6 +600,15 @@ td a { display: block; color: #d7aa60; }
 .admin-narrative { margin-top: 14px; }
 .admin-narrative ul { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
 .admin-narrative li { padding: 5px 9px; border: 1px solid rgba(197, 139, 43, 0.35); }
+.subscriber-admin-list { display: grid; gap: 18px; }
+#update-requests .admin-narrative { margin-top: 0; }
+#update-requests td:last-child { min-width: 300px; }
+#update-requests td button { margin: 0 8px 8px 0; padding: 8px 11px; cursor: pointer; border: 1px solid #9b702c; background: #1a1208; color: #e6b967; font-size: 0.7rem; letter-spacing: 0.06em; text-transform: uppercase; }
+#update-requests td button[aria-label^="Unsubscribe"] { border-color: #75453b; color: #d7aaa1; }
+#update-requests td button:disabled { cursor: wait; opacity: 0.62; }
+#update-requests td div { display: grid; gap: 7px; margin-top: 8px; }
+#update-requests td label { color: #aaa69e; font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; }
+#update-requests td input { width: min(460px, 100%); min-height: 40px; padding: 8px; border: 1px solid #6c542d; background: #020910; color: #d6d1c8; }
 .status-control { display: grid; width: min(300px, 100%); gap: 7px; margin-top: 18px; color: #d6d1c8; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
 .status-control select { min-height: 44px; padding: 0 12px; border: 1px solid #80602b; background: #030c15; color: #f2ede5; }
 
@@ -616,6 +635,7 @@ td a { display: block; color: #d7aa60; }
 
 @media (max-width: 760px) {
   .field-row, .feature-grid, .contact-layout, .stat-grid, .about-service-grid, .about-principles, .faq-layout, .intake-layout, .checkbox-grid, .admin-detail-grid, .document-upload-card { grid-template-columns: 1fr; }
+  .footer-link-grid { grid-template-columns: 1fr; text-align: center; }
   .masthead-image { aspect-ratio: 1707 / 600; background-size: 116% auto; background-position: center top; }
   .modal-backdrop { align-items: end; padding: 0; }
   .modal-card { max-height: 94vh; padding: 30px 22px; border-radius: 0; }

@@ -15,7 +15,7 @@ const localBindingConfig = {
   main: "./worker/index.ts",
   compatibility_flags: ["nodejs_compat"],
   vars: Object.fromEntries(
-    ["ADMIN_EMAILS", "OPENAI_API_KEY", "OPENAI_MODEL"]
+    ["ADMIN_EMAILS", "OPENAI_API_KEY", "OPENAI_MODEL", "RATE_LIMIT_SECRET"]
       .map((name) => [name, process.env[name]] as const)
       .filter((entry): entry is readonly [string, string] => Boolean(entry[1])),
   ),

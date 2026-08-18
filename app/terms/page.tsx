@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { BrandShell } from "@/app/_components/BrandShell";
 
 export const metadata: Metadata = { title: "Terms of Service" };
@@ -13,5 +14,7 @@ export default function TermsPage() {
     <h2>Ratchet Bail Bonds</h2><p>Ratchet Bail Bonds is identified as coming soon. The website is not currently offering to execute or post a bond, and no visitor should rely on it for emergency or time-critical release assistance.</p>
     <h2>Acceptable use</h2><p>You may not misuse the website, attempt unauthorized access, interfere with its operation, submit unlawful material, or impersonate another person.</p>
     <h2>AI concierge</h2><p>The concierge provides general service routing only. It may be inaccurate and cannot provide legal advice, approve a bond, assess an emergency, or make binding commitments.</p>
+    <h2>Email updates</h2><p>Submitting an update request does not enroll an unverified address. Updates begin only after the recipient uses a one-time confirmation link. A recipient may opt out at any time through our contact page.</p>
+    <h2>Privacy and questions</h2><p>Use of this website is also governed by our <Link href="/privacy">Privacy Policy</Link>. Questions about these terms may be submitted through our <Link href="/contact">contact page</Link>.</p>
   </div></main></BrandShell>;
 }

@@ -1,12 +1,16 @@
+import { readPublicJson } from "@/app/_lib/public-json";
 import { cleanString, clientHash, ensureDatabase, runtimeEnv } from "@/db/runtime";
 
 type IncomingMessage = { role?: unknown; text?: unknown };
 
 const systemPrompt = `You are the website concierge for The Contorno Corporation. Route visitors among three services: (1) private investigations and criminal defense case analysis for defense counsel, (2) Ratchet Bail Bonds, which is coming soon and is not currently posting bonds, and (3) community association management for condominium communities. Be concise, respectful, and calm. Never provide legal advice, predict case outcomes, promise release, quote bond terms, or claim an emergency response. Do not request evidence, social security numbers, payment details, or privileged case documents. Encourage a confidential callback request when personal case details would be needed. For emergencies, tell the visitor to call 911 or the appropriate local authority.`;
+const MAX_REQUEST_BYTES = 12 * 1024;
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json() as { messages?: IncomingMessage[] };
+    const parsed = await readPublicJson(request, MAX_REQUEST_BYTES);
+    if (parsed.response) return parsed.response;
+    const body = parsed.body as { messages?: IncomingMessage[] };
     const messages = Array.isArray(body.messages)
       ? body.messages.slice(-8).map((item) => ({
           role: item.role === "assistant" ? "assistant" : "user",
@@ -17,14 +21,17 @@ export async function POST(request: Request) {
 
     const DB = await ensureDatabase();
     const hash = await clientHash(request);
-    const cutoff = Date.now() - 60 * 60 * 1000;
+    const now = Date.now();
+    const cutoff = now - 60 * 60 * 1000;
+    await DB.prepare("DELETE FROM assistant_requests WHERE created_at < ?")
+      .bind(now - 24 * 60 * 60 * 1000).run();
     const recent = await DB.prepare("SELECT COUNT(*) AS count FROM assistant_requests WHERE client_hash = ? AND created_at >= ?")
       .bind(hash, cutoff).first<{ count: number }>();
     if ((recent?.count ?? 0) >= 20) {
       return Response.json({ reply: "I’ve reached the conversation limit for this hour. Please submit a confidential callback request and the team will follow up." }, { status: 429 });
     }
     await DB.prepare("INSERT INTO assistant_requests (id, created_at, client_hash) VALUES (?, ?, ?)")
-      .bind(crypto.randomUUID(), Date.now(), hash).run();
+      .bind(crypto.randomUUID(), now, hash).run();
 
     const { OPENAI_API_KEY, OPENAI_MODEL } = runtimeEnv();
     if (!OPENAI_API_KEY) return Response.json({ reply: fallbackReply(messages.at(-1)?.content ?? "") });
