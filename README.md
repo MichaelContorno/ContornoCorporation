@@ -53,7 +53,7 @@ The app is configured for Railway with `railway.json`. Railway builds the standa
 - `ADMIN_EMAILS`: comma-separated, verified GitHub email addresses permitted to open `/admin`
 - `ADMIN_GITHUB_CLIENT_ID` and `ADMIN_GITHUB_CLIENT_SECRET`: credentials for the organization’s GitHub OAuth App
 - `ADMIN_SESSION_SECRET`: a unique random secret of at least 32 characters used to sign HttpOnly administrator sessions
-- `OPENAI_API_KEY`: server-side OpenAI project key for the AI concierge
+- `OPENAI_API`: server-side OpenAI project key for the AI concierge (`OPENAI_API_KEY` is also accepted)
 - `OPENAI_MODEL`: optional model override; defaults to `gpt-5.6-luna`
 - `RATE_LIMIT_SECRET`: a stable, random 64-character secret used to create rotating abuse-prevention tokens; public forms fail closed when it is absent
 

@@ -33,12 +33,13 @@ export async function POST(request: Request) {
     await DB.prepare("INSERT INTO assistant_requests (id, created_at, client_hash) VALUES (?, ?, ?)")
       .bind(crypto.randomUUID(), now, hash).run();
 
-    const { OPENAI_API_KEY, OPENAI_MODEL } = runtimeEnv();
-    if (!OPENAI_API_KEY) return Response.json({ reply: fallbackReply(messages.at(-1)?.content ?? "") });
+    const { OPENAI_API, OPENAI_API_KEY, OPENAI_MODEL } = runtimeEnv();
+    const apiKey = OPENAI_API?.trim() || OPENAI_API_KEY?.trim();
+    if (!apiKey) return Response.json({ reply: fallbackReply(messages.at(-1)?.content ?? "") });
 
     const response = await fetch("https://api.openai.com/v1/responses", {
       method: "POST",
-      headers: { "content-type": "application/json", authorization: `Bearer ${OPENAI_API_KEY}` },
+      headers: { "content-type": "application/json", authorization: `Bearer ${apiKey}` },
       body: JSON.stringify({
         model: OPENAI_MODEL ?? "gpt-5.6-luna",
         instructions: systemPrompt,

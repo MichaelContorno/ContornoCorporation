@@ -227,7 +227,7 @@ test("keeps the standalone Railway build and secure admin login available", asyn
   assert.doesNotMatch(packageJson, /"vinext"|"wrangler"|"@openai\/sites-vite-plugin"/);
 
   const railwayConfig = JSON.parse(readFileSync(`${projectRoot}/railway.json`, "utf8"));
-  assert.equal(railwayConfig.deploy.healthcheckPath, "/api/health");
+  assert.equal(railwayConfig.deploy.healthcheckPath, "/");
   assert.deepEqual(railwayConfig.deploy.preDeployCommand, ["pnpm run db:migrate"]);
 
   const migration = readFileSync(`${projectRoot}/scripts/migrate-postgres.mjs`, "utf8");

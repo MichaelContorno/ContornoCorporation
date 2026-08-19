@@ -21,6 +21,7 @@ export type RuntimeEnv = {
   DATABASE_URL?: string;
   DB_POOL_MAX?: string;
   NODE_ENV?: string;
+  OPENAI_API?: string;
   OPENAI_API_KEY?: string;
   OPENAI_MODEL?: string;
   RATE_LIMIT_SECRET?: string;
